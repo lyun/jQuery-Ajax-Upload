@@ -29,7 +29,29 @@
 	if ($.ajaxUpload) {
 		return;
 	}
-
+	
+    if(!$.merge){
+	    $.merge = function( first, second ) {
+			var i = first.length,
+				j = 0;
+	
+			if ( typeof second.length === "number" ) {
+				for ( var l = second.length; j < l; j++ ) {
+					first[ i++ ] = second[ j ];
+				}
+	
+			} else {
+				while ( second[j] !== undefined ) {
+					first[ i++ ] = second[ j++ ];
+				}
+			}
+	
+			first.length = i;
+	
+			return first;
+		};
+	}
+    
 	$.ajaxUploadSettings = {
 		//onloadstart	: function(e){},
 		onprogress	: function(e){ console.log('Ajax Upload progress'); },
@@ -68,7 +90,7 @@
 	$.ajaxUploadExtractData = function( data, exist ) {
 		if ( !data/* || $.isArray(data)*/ || data instanceof FormData ) return data;
 		var fd = $.ajaxUploadExtractData(exist) || new FormData();
-		if ( typeof data === "string" || data instanceof jQuery ) {
+		if ( typeof data === "string" || data instanceof $ ) {
 			var kv = [];
 			$(data).each(function (index, element) {
 				$.merge( kv, $.ajaxUploadSerializeFiles(this) );
@@ -105,7 +127,7 @@
 	$.ajaxUpload = function(origSettings) {
 
 		// Merge Global settings
-		var s = jQuery.extend(true, {}, $.ajaxUploadSettings, origSettings);
+		var s = $.extend(true, {}, $.ajaxUploadSettings, origSettings);
 
 		// Normalize data
 		var fd = $.ajaxUploadExtractData(s.data);
@@ -130,7 +152,7 @@
 				}
 			}
 		};
-		s = jQuery.extend(true, {}, s, nesseserySettings);
+		s = $.extend(true, {}, s, nesseserySettings);
 		// make sure dont overwrites multipart
 		if (s.contentType) {
 			delete s.contentType;
@@ -141,10 +163,10 @@
 
 	$.fn.ajaxUpload = function( origSettings ) {
 		return this.each(function() {
-			var options = jQuery.extend(true, {}, origSettings);
+			var options = $.extend(true, {}, origSettings);
 			var data = $(this).serializeArray();
 
-			$('input:file', this).each(function (index, element) {
+			$("input[type='file']", this).each(function (index, element) {
 				$.merge( data, $.ajaxUploadSerializeFiles(this) );
 			});
 			
@@ -156,7 +178,7 @@
 
 	$.ajaxUploadPost = function( url, data, callback, type ) {
 		// shift arguments if data argument was omited
-		if ( jQuery.isFunction( data ) ) {
+		if ( $.isFunction( data ) ) {
 			type = type || callback;
 			callback = data;
 			data = {};
@@ -172,7 +194,7 @@
 	};
 
 	$.ajaxUploadPrompt = function( options ) {
-		var def = $.Deferred();
+		//var def = $.Deferred();
 		var nesseserySettings = {
 			success : function () {
 				if (options.success) {
@@ -182,20 +204,19 @@
 			}
 		};
 
-		var s = jQuery.extend(true, {}, options, nesseserySettings);
+		var s = $.extend(true, {}, options, nesseserySettings);
 		var id = 'ajaxupload' + Date.now();
 		var form = $('<form method="post" enctype="multipart/form-data" />').appendTo('body');
 		form.attr('action', s.url);
 		form.attr('target', id);
 
-		form.css({
+		/*form.css({
 			position: 'relative',
 			top: -1000,
 			left: -1000,
 			opacity: 0
-		});
-		form.submit(function () { //alert($(':file', this).val()); 
-		});
+		});*/
+		form.submit(function () { /*alert($('input[type="file"]', this).val()); */});
 				
 		var d = $('<input type="file" />').appendTo(form);
 		d.attr('name', $.ajaxUploadSettings.name);
@@ -220,18 +241,21 @@
 			s.files = this.files;
 			s.data = $.ajaxUploadExtractData(s.data, $.ajaxUploadSerializeFiles(this));
 
-			$.ajaxUpload(s).promise(def);
+			$.ajaxUpload(s);//.promise(def);
 		});
+		/*
 		d.click();
 		
 		return def;
+		*/
+        return false;
 	};
-	
+    
 	// bind a click event
 	$.fn.ajaxUploadPrompt = function( origSettings ) {
 		return this.click(function () {
 			$(this).trigger('ajaxUploadPrompt', $.ajaxUploadPrompt( origSettings ));
-		});
+        });
 	};
 
 	// bind a drop event
@@ -257,15 +281,15 @@
 
 				var dt = e.originalEvent.dataTransfer;  
 				var files = dt.files;							
-				var options = jQuery.extend(true, {}, origSettings);
+				var options = $.extend(true, {}, origSettings);
 				
 				options.data = $.ajaxUploadExtractData(files, options.data);
 				options.files = files;	
 				
-				$this.trigger('ajaxUploadDrop', $.ajaxUpload(options));
+				$(document.body).trigger('ajaxUploadDrop', $.ajaxUpload(options));
 
 				$this.removeClass('dragover');
 			});
 		});
 	};
-})(jQuery);
+})(jQuery|Zepto);
